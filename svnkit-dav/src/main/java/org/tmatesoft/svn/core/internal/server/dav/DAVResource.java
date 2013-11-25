@@ -96,6 +96,13 @@ public class DAVResource {
             Collection lockTokens, Map clientCapabilities) throws DAVException {
         myRepositoryManager = manager;
         myRepository = (FSRepository) repository;
+        try {
+            myRepository.testConnection();//this should create an FSFS object
+        } catch (SVNException svne) {
+            SVNDebugLog.getDefaultLog().logFine(SVNLogType.FSFS, svne.getMessage());
+            SVNErrorMessage err = SVNErrorMessage.create(svne.getErrorMessage().getErrorCode(), "Could not open the requested SVN filesystem");
+            throw DAVException.convertError(err, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Could not fetch resource information.", null);
+        }
         myLockTokens = lockTokens;
         myClientCapabilities = clientCapabilities;
         myFSFS = myRepository.getFSFS();
@@ -155,7 +162,7 @@ public class DAVResource {
         return myResourceURI;
     }
 
-    public FSRepository getRepository() {
+    public SVNRepository getRepository() {
         return myRepository;
     }
 
@@ -216,7 +223,7 @@ public class DAVResource {
             return DAVAutoVersion.ALWAYS;
         }
         
-        final DAVConfig config = myRepositoryManager.getDAVConfig(); 
+        DAVConfig config = myRepositoryManager.getDAVConfig(); 
         if (config.isAutoVersioning()) {
             if (getType() == DAVResourceType.REGULAR) {
                 return DAVAutoVersion.ALWAYS;
@@ -368,7 +375,7 @@ public class DAVResource {
     }
 
     public String getRepositoryUUID(boolean forceConnect) throws SVNException {
-        return getRepository().getFSFS().getUUID();
+        return getRepository().getRepositoryUUID(forceConnect);
     }
 
     public String getContentType() throws SVNException {
@@ -391,7 +398,7 @@ public class DAVResource {
     }
 
     public long getLatestRevision() throws SVNException {
-        return getRepository().getFSFS().getYoungestRevision();
+        return getRepository().getLatestRevision();
     }
 
     //TODO: remove this method later, use getContentLength(String path) instead
@@ -417,10 +424,9 @@ public class DAVResource {
     }
     
     public SVNLock getLock() throws SVNException {
-        final String path = getRepository().getRepositoryPath(getResourceURI().getPath());
-        return getRepository().getFSFS().getLockHelper(path, false);
+        return getRepository().getLock(getResourceURI().getPath());
     }
-    
+
     public void unlock(String token, boolean force) throws SVNException {
         Map pathsToTokens = new HashMap();
         pathsToTokens.put(getResourceURI().getPath(), token);

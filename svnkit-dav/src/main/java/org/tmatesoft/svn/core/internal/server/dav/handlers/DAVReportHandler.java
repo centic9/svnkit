@@ -334,10 +334,4 @@ public class DAVReportHandler extends ServletDAVHandler {
             return myDAVRequest;
         }
     }
-
-    @Override
-    public boolean isClosingConnection() {
-        return true;
-    }
-
 }

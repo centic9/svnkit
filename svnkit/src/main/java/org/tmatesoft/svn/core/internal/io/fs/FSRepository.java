@@ -52,6 +52,7 @@ import org.tmatesoft.svn.core.internal.wc.SVNFileUtil;
 import org.tmatesoft.svn.core.internal.wc.SVNMergeInfoManager;
 import org.tmatesoft.svn.core.io.ISVNEditor;
 import org.tmatesoft.svn.core.io.ISVNFileRevisionHandler;
+import org.tmatesoft.svn.core.io.ISVNInheritedPropertiesHandler;
 import org.tmatesoft.svn.core.io.ISVNLocationEntryHandler;
 import org.tmatesoft.svn.core.io.ISVNLocationSegmentHandler;
 import org.tmatesoft.svn.core.io.ISVNLockHandler;
@@ -465,7 +466,8 @@ public class FSRepository extends SVNRepository implements ISVNReporter {
         try {
             openRepository();
             path = getRepositoryPath(path);
-            return myFSFS.getLockHelper(path, false);
+            SVNLock lock = myFSFS.getLockHelper(path, false);
+            return lock;
         } finally {
             closeRepository();
         }
@@ -689,14 +691,47 @@ public class FSRepository extends SVNRepository implements ISVNReporter {
 		        throw svne;
 		    }
 		    return true;
+		} else if (capability == SVNCapability.INHERITED_PROPS) {
+		    return true;
 		}
 		SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.UNKNOWN_CAPABILITY, 
 				"Don''t know anything about capability ''{0}''", capability);
 		SVNErrorManager.error(err, SVNLogType.FSFS);
 		return false;
 	}
+	
+    protected void getInheritedPropertiesImpl(String path, long revision, String propertyName, ISVNInheritedPropertiesHandler handler) throws SVNException {
+        try {
+            openRepository();
+            path = getRepositoryPath(path);
+            
+            String parentPath = path;
+            
+            final FSRevisionRoot root = myFSFS.createRevisionRoot(revision);
+            while(!"/".equals(parentPath) && !"".equals(parentPath)) {
+                parentPath = SVNPathUtil.removeTail(parentPath);
+                if ("".equals(parentPath)) {
+                    parentPath = "/";
+                }
+                
+                final FSRevisionNode node = root.getRevisionNode(parentPath);
+                final SVNProperties properties = myFSFS.getProperties(node);
+                if (properties != null && handler != null && !properties.isEmpty()) {
+                    if (propertyName != null && properties.containsName(propertyName)) {
+                        final SVNProperties singleProperty = new SVNProperties();
+                        singleProperty.put(propertyName, properties.getSVNPropertyValue(propertyName));
+                        handler.handleInheritedProperites(parentPath, singleProperty);
+                    } else if (propertyName == null) {
+                        handler.handleInheritedProperites(parentPath, properties);
+                    }
+                }
+            }
+        } finally {
+            closeRepository();
+        }
+    }
 
-    public void closeRepository() throws SVNException {
+    void closeRepository() throws SVNException {
         if (myFSFS != null) {
             myFSFS.close();
         }
@@ -762,7 +797,7 @@ public class FSRepository extends SVNRepository implements ISVNReporter {
         }
     }
 
-    public void openRepositoryRoot() throws SVNException {
+    private void openRepositoryRoot() throws SVNException {
         lock();
 
         String hostName = getLocation().getHost();
@@ -991,5 +1026,4 @@ public class FSRepository extends SVNRepository implements ISVNReporter {
         }
         return myLogDriver;
     }
-
 }

@@ -12,7 +12,6 @@
 package org.tmatesoft.svn.core.internal.server.dav.handlers;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -55,15 +54,15 @@ public class DAVPropPatchHandler extends ServletDAVHandler {
             return;
         }
         
-        final long readLength = readInput(false);
+        long readLength = readInput(false);
         if (readLength <= 0) {
             getPropPatchRequest().invalidXMLRoot();
         }
         
         validateRequest(resource, DAVDepth.DEPTH_ZERO, DAV_VALIDATE_RESOURCE, null, null, null);
-        final DAVAutoVersionInfo avInfo = autoCheckOut(resource, false);
+        DAVAutoVersionInfo avInfo = autoCheckOut(resource, false);
         
-        final DAVPropertiesProvider propsProvider;
+        DAVPropertiesProvider propsProvider = null;
         try {
             propsProvider = DAVPropertiesProvider.createPropertiesProvider(resource, this);
         } catch (DAVException dave) {
@@ -73,7 +72,7 @@ public class DAVPropPatchHandler extends ServletDAVHandler {
         }
         
         boolean isFailure = false;
-        List properties = new ArrayList();
+        List properties = new LinkedList();
         DAVPropPatchRequest requestXMLObject = getPropPatchRequest();  
         DAVElementProperty rootElement = requestXMLObject.getRoot();
         List childrenElements = rootElement.getChildren();

@@ -11,16 +11,9 @@
  */
 package org.tmatesoft.svn.core.internal.wc17.db.statement;
 
-import java.io.File;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.internal.db.SVNSqlJetDb;
 import org.tmatesoft.svn.core.internal.db.SVNSqlJetDeleteStatement;
-import org.tmatesoft.svn.core.internal.wc.SVNFileUtil;
-import org.tmatesoft.svn.core.internal.wc17.db.statement.SVNWCDbSchema.NODES__Fields;
 
 /**
  * DELETE FROM nodes
@@ -36,9 +29,6 @@ import org.tmatesoft.svn.core.internal.wc17.db.statement.SVNWCDbSchema.NODES__Fi
  */
 public class SVNWCDbDeleteNodesRecursive extends SVNSqlJetDeleteStatement {
 
-    private Collection<File> paths;
-    private Set<String> excludedPresences;
-
     public SVNWCDbDeleteNodesRecursive(SVNSqlJetDb sDb) throws SVNException {
         super(sDb, SVNWCDbSchema.NODES);
     }
@@ -48,16 +38,6 @@ public class SVNWCDbDeleteNodesRecursive extends SVNSqlJetDeleteStatement {
     }
 
     protected boolean isFilterPassed() throws SVNException {
-        final long rowDepth = getColumnLong(SVNWCDbSchema.NODES__Fields.op_depth);
-        if (paths != null) {
-            final long collectDepth = (Long) getBind(4);
-            if (rowDepth >= collectDepth) {
-                final String presence = getColumnString(NODES__Fields.presence);
-                if (!excludedPresences.contains(presence)) {
-                    paths.add(SVNFileUtil.createFilePath(getColumnString(NODES__Fields.local_relpath)));
-                }
-            }
-        } 
         final long selectDepth = (Long) getBind(3);
         if (getColumnLong(SVNWCDbSchema.NODES__Fields.op_depth) < selectDepth) {
             return false;
@@ -68,22 +48,5 @@ public class SVNWCDbDeleteNodesRecursive extends SVNSqlJetDeleteStatement {
     @Override
     protected String getPathScope() {
         return (String) getBind(2);
-    }
-    
-    public void setCollectPaths(Collection<File> paths) {
-        this.paths = paths;
-        if (excludedPresences == null) {
-            excludedPresences = new HashSet<String>();
-            excludedPresences.add("base-deleted");
-            excludedPresences.add("not-present");
-            excludedPresences.add("excluded");
-            excludedPresences.add("absent");
-        }
-    }
-
-    @Override
-    public void reset() throws SVNException {
-        paths = null;
-        super.reset();
     }
 }

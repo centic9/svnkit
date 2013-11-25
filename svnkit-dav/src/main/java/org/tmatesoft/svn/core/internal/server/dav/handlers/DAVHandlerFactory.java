@@ -51,7 +51,7 @@ public class DAVHandlerFactory {
     public static final String METHOD_MERGE = "MERGE";
 
     public static ServletDAVHandler createHandler(DAVRepositoryManager manager, HttpServletRequest request, HttpServletResponse response) throws SVNException {
-        final String methodName = request.getMethod();
+        String methodName = request.getMethod();
 
         if (METHOD_PROPFIND.equals(methodName)) {
             return new DAVPropfindHandler(manager, request, response);

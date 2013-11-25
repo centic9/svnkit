@@ -71,9 +71,6 @@ class JNALibraryLoader {
                 ourSecurityLibrary = null;
                 ourWin32Library = null;
             }
-            
-            SVNDebugLog.getDefaultLog().logFine(SVNLogType.NETWORK,  "security library name: " + getSecurityLibraryName());
-            SVNDebugLog.getDefaultLog().logFine(SVNLogType.NETWORK,  "security library: " + ourSecurityLibrary);
         }
         
         if (SVNFileUtil.isOSX || SVNFileUtil.isLinux || SVNFileUtil.isBSD || SVNFileUtil.isSolaris) {

@@ -16,6 +16,7 @@ import org.tmatesoft.svn.core.SVNErrorMessage;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.internal.util.SVNPathUtil;
 import org.tmatesoft.svn.core.internal.wc.SVNErrorManager;
+import org.tmatesoft.svn.util.SVNDebugLog;
 import org.tmatesoft.svn.util.SVNLogType;
 
 /**
@@ -40,7 +41,6 @@ public class DAVResourceURI {
     private boolean myIsWorking = false;
 
     public DAVResourceURI(String context, String uri, String label, boolean useCheckedIn) throws SVNException {
-        /*
         StringBuffer logBuffer = new StringBuffer();
         logBuffer.append('\n');
         logBuffer.append("uri: " + uri);
@@ -50,12 +50,12 @@ public class DAVResourceURI {
         logBuffer.append("context: " + context);
         
         SVNDebugLog.getDefaultLog().logFine(SVNLogType.DEFAULT, logBuffer.toString());
-        */
+        
         myURI = uri == null ? "" : uri;
         myContext = context;
         myRevision = DAVResource.INVALID_REVISION;
         parseURI(label, useCheckedIn);
-/*
+
         logBuffer.delete(0, logBuffer.length());
         logBuffer.append('\n');
         logBuffer.append("DAVResourceURI.getRequestURI(): " + getRequestURI());
@@ -66,7 +66,6 @@ public class DAVResourceURI {
         logBuffer.append('\n');
         logBuffer.append("DAVResourceURI.getContext(): " + getContext());
         SVNDebugLog.getDefaultLog().logFine(SVNLogType.DEFAULT, logBuffer.toString());
-        */
     }
 
     public DAVResourceURI(String context, String uri, String path, long revision, DAVResourceKind kind, DAVResourceType type, String activityID, 
